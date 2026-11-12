@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-11-12T08:30:00.000Z",
+  "responsables": [
+    "Marie-Claude Gagnon",
+    "Jean-François Tremblay",
+    "Sophie Lavoie",
+    "Marc-Antoine Roy",
+    "Comité complet (CA)"
+  ],
+  "categories": [
+    "Commandites & Partenariats",
+    "Logistique & Événement",
+    "Communications & Médias",
+    "Finances & Budget",
+    "Bénévoles",
+    "Gouvernance / CA"
+  ],
+  "actions": [
+    {
+      "id": "act-demo-1",
+      "titre": "Contacter les 5 commanditaires principaux de l'an dernier",
+      "responsable": "Marie-Claude Gagnon",
+      "dateCible": "2026-11-25",
+      "statut": "En cours",
+      "commentaire": "Envoyer le nouveau plan de visibilité 2027 avant le premier appel.",
+      "priorite": 1,
+      "origine": "Rencontre CA du 10 novembre",
+      "categorie": "Commandites & Partenariats",
+      "createdAt": "2026-11-10T14:00:00.000Z",
+      "updatedAt": "2026-11-12T08:30:00.000Z"
+    },
+    {
+      "id": "act-demo-2",
+      "titre": "Réserver le parc et confirmer le permis municipal",
+      "responsable": "Jean-François Tremblay",
+      "dateCible": "2026-12-05",
+      "statut": "En attente",
+      "commentaire": "En attente du retour de la ville suite à la demande envoyée.",
+      "priorite": 1,
+      "origine": "Rencontre CA du 10 novembre",
+      "categorie": "Logistique & Événement",
+      "createdAt": "2026-11-10T14:15:00.000Z",
+      "updatedAt": "2026-11-12T08:30:00.000Z"
+    },
+    {
+      "id": "act-demo-3",
+      "titre": "Préparer l'affiche officielle et le visuel pour les réseaux sociaux",
+      "responsable": "Sophie Lavoie",
+      "dateCible": "2026-12-15",
+      "statut": "En cours",
+      "commentaire": "Inclure le logo des nouveaux partenaires dès confirmation.",
+      "priorite": 2,
+      "origine": "Comité communications",
+      "categorie": "Communications & Médias",
+      "createdAt": "2026-11-11T09:00:00.000Z",
+      "updatedAt": "2026-11-12T08:30:00.000Z"
+    },
+    {
+      "id": "act-demo-4",
+      "titre": "Mettre à jour les prévisions budgétaires de la levée de fonds",
+      "responsable": "Marc-Antoine Roy",
+      "dateCible": "2026-11-20",
+      "statut": "Terminé",
+      "commentaire": "Budget validé et partagé au trésorier.",
+      "priorite": 2,
+      "origine": "Suivi mensuel finances",
+      "categorie": "Finances & Budget",
+      "createdAt": "2026-11-05T10:00:00.000Z",
+      "updatedAt": "2026-11-12T08:30:00.000Z"
+    }
+  ]
+}
