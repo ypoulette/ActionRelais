@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Actions Relais — Gestion des actions du CA</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- En-tête principal -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon" aria-hidden="true">🎗️</div>
+        <div>
+          <h1>Actions Relais</h1>
+          <p class="subtitle">Suivi des actions — Levée de fonds contre le cancer</p>
+        </div>
+      </div>
+
+      <div class="header-actions no-print">
+        <button id="btn-new-action" class="btn btn-primary" type="button">
+          <span aria-hidden="true">+</span> Nouvelle action
+        </button>
+        <button id="btn-manage-lists" class="btn btn-secondary" type="button">
+          Gérer les listes
+        </button>
+        <button id="btn-backups" class="btn btn-secondary" type="button">
+          Sauvegardes &amp; Sync
+        </button>
+        <button id="btn-print" class="btn btn-ghost" type="button" title="Imprimer la liste">
+          Imprimer
+        </button>
+      </div>
+    </header>
+
+    <!-- Barre d'état de sauvegarde -->
+    <div class="status-banner no-print" id="sync-banner">
+      <div class="sync-info">
+        <span class="status-dot" id="sync-dot"></span>
+        <span id="sync-status-text">Chargement des données...</span>
+      </div>
+      <div class="sync-actions">
+        <span id="last-backup-text" class="muted-text"></span>
+        <button id="btn-quick-refresh" class="btn-link" type="button" style="display: none;">
+          Actualiser
+        </button>
+        <button id="btn-open-sync" class="btn-link" type="button">
+          Configurer le partage GitHub
+        </button>
+      </div>
+    </div>
+
+    <!-- Cartes de résumé cliquables -->
+    <section class="summary-grid no-print" aria-label="Résumé des actions">
+      <button class="summary-card active" data-filter-statut="" type="button">
+        <span class="summary-label">Toutes les actions</span>
+        <span class="summary-value" id="count-total">0</span>
+      </button>
+      <button class="summary-card" data-filter-statut="En cours" type="button">
+        <span class="summary-label">En cours</span>
+        <span class="summary-value text-blue" id="count-encours">0</span>
+      </button>
+      <button class="summary-card" data-filter-statut="En attente" type="button">
+        <span class="summary-label">En attente</span>
+        <span class="summary-value text-amber" id="count-attente">0</span>
+      </button>
+      <button class="summary-card" data-filter-statut="Terminé" type="button">
+        <span class="summary-label">Terminées</span>
+        <span class="summary-value text-green" id="count-termine">0</span>
+      </button>
+    </section>
+
+    <!-- Zone de filtres -->
+    <section class="filters-panel no-print" aria-label="Filtres des actions">
+      <div class="filters-row">
+        <div class="filter-group filter-search">
+          <label for="filter-search">Recherche</label>
+          <input
+            type="search"
+            id="filter-search"
+            placeholder="Mot-clé, action, origine, commentaire..."
+          >
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-responsable">Responsable</label>
+          <select id="filter-responsable">
+            <option value="">Tous</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-statut">Statut</label>
+          <select id="filter-statut">
+            <option value="">Tous</option>
+            <option value="En cours">En cours</option>
+            <option value="En attente">En attente</option>
+            <option value="Terminé">Terminé</option>
+            <option value="Annulé">Annulé</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-priorite">Priorité</label>
+          <select id="filter-priorite">
+            <option value="">Toutes</option>
+            <option value="1">1 — Haute</option>
+            <option value="2">2 — Moyenne</option>
+            <option value="3">3 — Basse</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="filter-categorie">Catégorie</label>
+          <select id="filter-categorie">
+            <option value="">Toutes</option>
+          </select>
+        </div>
+
+        <div class="filter-group filter-reset-wrap">
+          <button id="btn-reset-filters" class="btn btn-ghost btn-sm" type="button">
+            Réinitialiser
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tableau des actions -->
+    <main class="table-card">
+      <div class="table-toolbar">
+        <span id="results-count" class="muted-text">0 action affichée</span>
+        <div class="sort-controls no-print">
+          <label for="sort-by">Trier par :</label>
+          <select id="sort-by">
+            <option value="priorite-asc">Priorité (1 → 3)</option>
+            <option value="date-asc">Date cible (plus proche)</option>
+            <option value="date-desc">Date cible (plus éloignée)</option>
+            <option value="responsable-asc">Responsable (A → Z)</option>
+            <option value="statut-asc">Statut</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="actions-table" id="actions-table">
+          <thead>
+            <tr>
+              <th class="col-prio">Priorité</th>
+              <th class="col-action">Action / Origine / Commentaire</th>
+              <th class="col-cat">Catégorie</th>
+              <th class="col-resp">Responsable</th>
+              <th class="col-date">Date cible</th>
+              <th class="col-statut">Statut</th>
+              <th class="col-ops no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="actions-tbody">
+            <!-- Rempli dynamiquement -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <p>Aucune action ne correspond aux filtres sélectionnés.</p>
+        <button id="btn-empty-new" class="btn btn-primary" type="button">+ Ajouter une action</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL 1 : Ajouter / Modifier une action -->
+  <div class="modal-backdrop" id="modal-action" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-action-title">
+      <div class="modal-header">
+        <h2 id="modal-action-title">Nouvelle action</h2>
+        <button class="modal-close" type="button" data-close-modal="modal-action" aria-label="Fermer">&times;</button>
+      </div>
+      <form id="form-action" class="modal-body">
+        <input type="hidden" id="action-id">
+
+        <div class="form-group">
+          <label for="action-titre">Action à réaliser <span class="required">*</span></label>
+          <input
+            type="text"
+            id="action-titre"
+            required
+            placeholder="Ex. : Contacter les commanditaires principaux"
+          >
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <div class="label-with-link">
+              <label for="action-responsable">Responsable <span class="required">*</span></label>
+              <button type="button" class="btn-link-sm" id="btn-inline-add-resp">+ Gérer</button>
+            </div>
+            <select id="action-responsable" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="action-date">Date cible</label>
+            <input type="date" id="action-date">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="action-statut">Statut <span class="required">*</span></label>
+            <select id="action-statut" required>
+              <option value="En cours">En cours</option>
+              <option value="En attente">En attente</option>
+              <option value="Terminé">Terminé</option>
+              <option value="Annulé">Annulé</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="action-priorite">Priorité <span class="required">*</span></label>
+            <select id="action-priorite" required>
+              <option value="1">1 — Haute (Urgent)</option>
+              <option value="2">2 — Moyenne</option>
+              <option value="3">3 — Basse</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <div class="label-with-link">
+              <label for="action-categorie">Catégorie</label>
+              <button type="button" class="btn-link-sm" id="btn-inline-add-cat">+ Gérer</button>
+            </div>
+            <select id="action-categorie"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="action-origine">Origine de l'action</label>
+            <input
+              type="text"
+              id="action-origine"
+              list="origines-suggestions"
+              placeholder="Ex. : Rencontre CA du 12 nov."
+            >
+            <datalist id="origines-suggestions"></datalist>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="action-commentaire">Commentaire / Notes</label>
+          <textarea
+            id="action-commentaire"
+            rows="3"
+            placeholder="Détails supplémentaires, suivi, blocages..."
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-close-modal="modal-action">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer l'action</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2 : Gérer les listes (Responsables & Catégories) -->
+  <div class="modal-backdrop" id="modal-lists" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modal-lists-title">
+      <div class="modal-header">
+        <h2 id="modal-lists-title">Gérer les listes déroulantes</h2>
+        <button class="modal-close" type="button" data-close-modal="modal-lists" aria-label="Fermer">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="lists-grid">
+          <!-- Colonne Responsables -->
+          <div class="list-manager-box">
+            <h3>Responsables</h3>
+            <p class="muted-text">Ajoutez, renommez ou retirez des membres.</p>
+            <form id="form-add-responsable" class="inline-add-form">
+              <input type="text" id="input-new-responsable" placeholder="Nouveau nom..." required>
+              <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+            </form>
+            <ul id="list-responsables" class="editable-list"></ul>
+          </div>
+
+          <!-- Colonne Catégories -->
+          <div class="list-manager-box">
+            <h3>Catégories</h3>
+            <p class="muted-text">Personnalisez les catégories d'actions.</p>
+            <form id="form-add-categorie" class="inline-add-form">
+              <input type="text" id="input-new-categorie" placeholder="Nouvelle catégorie..." required>
+              <button type="submit" class="btn btn-primary btn-sm">Ajouter</button>
+            </form>
+            <ul id="list-categories" class="editable-list"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close-modal="modal-lists">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3 : Sauvegardes & Synchronisation GitHub -->
+  <div class="modal-backdrop" id="modal-backups" hidden>
+    <div class="modal modal-lg" role="dialog" aria-modal="true" aria-labelledby="modal-backups-title">
+      <div class="modal-header">
+        <h2 id="modal-backups-title">Sauvegardes (Back up) &amp; Synchronisation</h2>
+        <button class="modal-close" type="button" data-close-modal="modal-backups" aria-label="Fermer">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Section Sauvegarde manuelle -->
+        <div class="backup-section">
+          <h3>1. Sauvegarde manuelle (Export / Restauration)</h3>
+          <p class="muted-text">
+            Téléchargez une copie complète de toutes les actions et listes sur votre ordinateur, ou restaurez une copie précédente.
+          </p>
+          <div class="backup-buttons">
+            <button id="btn-export-json" class="btn btn-primary" type="button">
+              Télécharger une sauvegarde (.json)
+            </button>
+            <button id="btn-export-csv" class="btn btn-secondary" type="button">
+              Exporter pour Excel (.csv)
+            </button>
+            <label class="btn btn-secondary file-upload-btn">
+              Restaurer un fichier (.json)
+              <input type="file" id="input-import-json" accept=".json,application/json" hidden>
+            </label>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Section Sauvegardes automatiques quotidiennes -->
+        <div class="backup-section">
+          <div class="section-header-row">
+            <div>
+              <h3>2. Sauvegardes automatiques quotidiennes</h3>
+              <p class="muted-text">
+                Une image de sauvegarde est créée automatiquement chaque jour à l'ouverture (30 derniers jours conservés).
+              </p>
+            </div>
+            <button id="btn-snapshot-now" class="btn btn-secondary btn-sm" type="button">
+              Créer une image maintenant
+            </button>
+          </div>
+          <div id="daily-backups-list" class="snapshots-list">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- Section Synchronisation GitHub -->
+        <div class="backup-section">
+          <h3>3. Synchronisation partagée sur GitHub (pour tout le CA)</h3>
+          <p class="muted-text">
+            En connectant ce dépôt GitHub, chaque modification est enregistrée directement dans le fichier <code>data.json</code> du dépôt. Tous les membres du CA voient les mêmes données à jour, sans dépendre de l'historique du navigateur.
+          </p>
+          <form id="form-github-sync" class="github-form">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="gh-owner">Propriétaire / Organisation GitHub</label>
+                <input type="text" id="gh-owner" placeholder="ex. : mon-organisme">
+              </div>
+              <div class="form-group">
+                <label for="gh-repo">Nom du dépôt</label>
+                <input type="text" id="gh-repo" placeholder="ex. : actions-relais">
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="gh-branch">Branche</label>
+                <input type="text" id="gh-branch" placeholder="main" value="main">
+              </div>
+              <div class="form-group">
+                <label for="gh-token">Jeton d'accès personnel (Token)</label>
+                <input type="password" id="gh-token" placeholder="github_pat_... ou ghp_...">
+              </div>
+            </div>
+            <div class="github-actions-row">
+              <button type="submit" class="btn btn-primary btn-sm">Enregistrer et synchroniser</button>
+              <button type="button" id="btn-gh-pull" class="btn btn-secondary btn-sm">Recharger depuis GitHub</button>
+              <button type="button" id="btn-gh-disconnect" class="btn btn-ghost btn-sm">Déconnecter</button>
+            </div>
+            <p id="gh-feedback" class="feedback-msg"></p>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close-modal="modal-backups">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
