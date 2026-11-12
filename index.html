@@ -300,6 +300,107 @@ body {
   color: var(--text-muted);
 }
 
+/* Multi-select checkbox dropdown */
+.multi-select {
+  position: relative;
+}
+
+.multi-select-btn {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.multi-select-btn:hover {
+  border-color: var(--text-light);
+}
+.multi-select-btn.has-selection {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.multi-select-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multi-select-caret {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.multi-select-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 280px;
+  max-height: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.multi-select-menu[hidden] {
+  display: none;
+}
+
+.multi-select-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+  font-size: 0.78rem;
+}
+
+.multi-select-options {
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--text);
+  margin: 0;
+}
+.multi-select-option:hover {
+  background: var(--surface-muted);
+}
+.multi-select-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 input[type="text"],
 input[type="search"],
 input[type="date"],
@@ -853,38 +954,23 @@ input:focus, select:focus, textarea:focus {
         </div>
 
         <div class="filter-group">
-          <label for="filter-responsable">Responsable</label>
-          <select id="filter-responsable">
-            <option value="">Tous</option>
-          </select>
+          <label>Responsable</label>
+          <div class="multi-select" id="ms-responsable" data-filter="responsable"></div>
         </div>
 
         <div class="filter-group">
-          <label for="filter-statut">Statut</label>
-          <select id="filter-statut">
-            <option value="">Tous</option>
-            <option value="En cours">En cours</option>
-            <option value="En attente">En attente</option>
-            <option value="Terminé">Terminé</option>
-            <option value="Annulé">Annulé</option>
-          </select>
+          <label>Statut</label>
+          <div class="multi-select" id="ms-statut" data-filter="statut"></div>
         </div>
 
         <div class="filter-group">
-          <label for="filter-priorite">Priorité</label>
-          <select id="filter-priorite">
-            <option value="">Toutes</option>
-            <option value="1">1 — Haute</option>
-            <option value="2">2 — Moyenne</option>
-            <option value="3">3 — Basse</option>
-          </select>
+          <label>Priorité</label>
+          <div class="multi-select" id="ms-priorite" data-filter="priorite"></div>
         </div>
 
         <div class="filter-group">
-          <label for="filter-categorie">Catégorie</label>
-          <select id="filter-categorie">
-            <option value="">Toutes</option>
-          </select>
+          <label>Catégorie</label>
+          <div class="multi-select" id="ms-categorie" data-filter="categorie"></div>
         </div>
 
         <div class="filter-group filter-reset-wrap">
@@ -1220,10 +1306,10 @@ input:focus, select:focus, textarea:focus {
     },
     filters: {
       search: '',
-      responsable: '',
-      statut: '',
-      priorite: '',
-      categorie: ''
+      responsable: [],
+      statut: [],
+      priorite: [],
+      categorie: []
     },
     sortBy: 'priorite-asc',
     db: null
@@ -1480,7 +1566,13 @@ input:focus, select:focus, textarea:focus {
         }
       }
     } else {
-      updateSyncBanner('local', 'Mode local (navigateur) — Pensez à exporter ou connecter GitHub');
+      const onGitHubPages = window.location.hostname.endsWith('.github.io');
+      updateSyncBanner(
+        'local',
+        onGitHubPages
+          ? 'Enregistré dans ce navigateur uniquement — Activez le partage GitHub (jeton) pour tout le CA'
+          : 'Mode local (navigateur) — Pensez à exporter ou connecter GitHub'
+      );
     }
   }
 
@@ -1557,7 +1649,13 @@ input:focus, select:focus, textarea:focus {
         }
         await dbPut('state', { key: 'current', data: state.data });
       }
-      updateSyncBanner('local', 'Mode local (navigateur) — Connectez GitHub pour partager avec le CA');
+      const onGitHubPages = window.location.hostname.endsWith('.github.io');
+      updateSyncBanner(
+        'local',
+        onGitHubPages
+          ? 'Hébergé sur GitHub (lecture seule) — Configurez un jeton pour enregistrer pour tout le CA'
+          : 'Mode local (navigateur) — Connectez GitHub pour partager avec le CA'
+      );
     }
 
     await ensureDailyBackup(false);
@@ -1565,22 +1663,67 @@ input:focus, select:focus, textarea:focus {
   }
 
   // --- Rendu UI ---
+  function getMultiSelectLabel(selected, allLabel) {
+    if (!selected || selected.length === 0) return allLabel;
+    if (selected.length === 1) return selected[0];
+    return `${selected.length} sélectionnés`;
+  }
+
+  function renderMultiSelect(containerId, filterKey, items, allLabel, displayMap = null) {
+    const container = $(containerId);
+    if (!container) return;
+    const isOpen = container.dataset.open === 'true';
+    const validValues = items.map((i) => String(i));
+    state.filters[filterKey] = state.filters[filterKey].filter((v) => validValues.includes(v));
+    const selected = state.filters[filterKey];
+
+    const labelText = selected.length === 1 && displayMap
+      ? (displayMap[selected[0]] || selected[0])
+      : getMultiSelectLabel(selected, allLabel);
+
+    container.innerHTML = `
+      <button type="button" class="multi-select-btn ${selected.length > 0 ? 'has-selection' : ''}" aria-expanded="${isOpen}">
+        <span class="multi-select-label">${escapeHTML(labelText)}</span>
+        <span class="multi-select-caret" aria-hidden="true">▼</span>
+      </button>
+      <div class="multi-select-menu" ${isOpen ? '' : 'hidden'}>
+        <div class="multi-select-actions">
+          <button type="button" class="btn-link-sm" data-ms-op="all">Tout cocher</button>
+          <button type="button" class="btn-link-sm" data-ms-op="none">Effacer</button>
+        </div>
+        <div class="multi-select-options">
+          ${items.map((val) => {
+            const strVal = String(val);
+            const checked = selected.includes(strVal) ? 'checked' : '';
+            const text = displayMap ? (displayMap[strVal] || strVal) : strVal;
+            return `
+              <label class="multi-select-option">
+                <input type="checkbox" value="${escapeHTML(strVal)}" ${checked}>
+                <span>${escapeHTML(text)}</span>
+              </label>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAllMultiSelects() {
+    const { responsables, categories } = state.data;
+    renderMultiSelect('ms-responsable', 'responsable', responsables, 'Tous');
+    renderMultiSelect('ms-statut', 'statut', STATUTS, 'Tous');
+    renderMultiSelect('ms-priorite', 'priorite', ['1', '2', '3'], 'Toutes', {
+      '1': '1 — Haute',
+      '2': '2 — Moyenne',
+      '3': '3 — Basse'
+    });
+    renderMultiSelect('ms-categorie', 'categorie', categories, 'Toutes');
+  }
+
   function populateSelectOptions() {
     const { responsables, categories, actions } = state.data;
 
-    // Filtre Responsable
-    const fResp = $('filter-responsable');
-    const prevFResp = fResp.value;
-    fResp.innerHTML = '<option value="">Tous</option>' +
-      responsables.map((r) => `<option value="${escapeHTML(r)}">${escapeHTML(r)}</option>`).join('');
-    fResp.value = responsables.includes(prevFResp) ? prevFResp : '';
-
-    // Filtre Catégorie
-    const fCat = $('filter-categorie');
-    const prevFCat = fCat.value;
-    fCat.innerHTML = '<option value="">Toutes</option>' +
-      categories.map((c) => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
-    fCat.value = categories.includes(prevFCat) ? prevFCat : '';
+    renderAllMultiSelects();
 
     // Formulaire Action : Responsable & Catégorie
     const aResp = $('action-responsable');
@@ -1605,9 +1748,13 @@ input:focus, select:focus, textarea:focus {
     $('count-attente').textContent = actions.filter((a) => a.statut === 'En attente').length;
     $('count-termine').textContent = actions.filter((a) => a.statut === 'Terminé').length;
 
+    const selectedStatuts = state.filters.statut;
     document.querySelectorAll('.summary-card').forEach((card) => {
       const target = card.getAttribute('data-filter-statut');
-      card.classList.toggle('active', target === state.filters.statut);
+      const isActive = target === ''
+        ? selectedStatuts.length === 0
+        : (selectedStatuts.length === 1 && selectedStatuts[0] === target);
+      card.classList.toggle('active', isActive);
     });
   }
 
@@ -1616,10 +1763,10 @@ input:focus, select:focus, textarea:focus {
     const q = search.trim().toLowerCase();
 
     const filtered = state.data.actions.filter((a) => {
-      if (responsable && a.responsable !== responsable) return false;
-      if (statut && a.statut !== statut) return false;
-      if (priorite && String(a.priorite) !== priorite) return false;
-      if (categorie && a.categorie !== categorie) return false;
+      if (responsable.length > 0 && !responsable.includes(a.responsable)) return false;
+      if (statut.length > 0 && !statut.includes(a.statut)) return false;
+      if (priorite.length > 0 && !priorite.includes(String(a.priorite))) return false;
+      if (categorie.length > 0 && !categorie.includes(a.categorie)) return false;
       if (q) {
         const haystack = [a.titre, a.origine, a.commentaire, a.responsable, a.categorie]
           .join(' ')
@@ -1954,8 +2101,8 @@ input:focus, select:focus, textarea:focus {
     document.querySelectorAll('.summary-card').forEach((card) => {
       card.addEventListener('click', () => {
         const statut = card.getAttribute('data-filter-statut');
-        state.filters.statut = statut;
-        $('filter-statut').value = statut;
+        state.filters.statut = statut ? [statut] : [];
+        renderAllMultiSelects();
         renderSummary();
         renderTable();
       });
@@ -1966,34 +2113,70 @@ input:focus, select:focus, textarea:focus {
       state.filters.search = e.target.value;
       renderTable();
     });
-    $('filter-responsable').addEventListener('change', (e) => {
-      state.filters.responsable = e.target.value;
-      renderTable();
+
+    // Multi-select dropdowns
+    document.querySelectorAll('.multi-select').forEach((ms) => {
+      ms.addEventListener('click', (e) => {
+        const btn = e.target.closest('.multi-select-btn');
+        if (btn) {
+          const willOpen = ms.dataset.open !== 'true';
+          document.querySelectorAll('.multi-select').forEach((other) => {
+            other.dataset.open = 'false';
+            const menu = other.querySelector('.multi-select-menu');
+            if (menu) menu.hidden = true;
+          });
+          ms.dataset.open = String(willOpen);
+          const menu = ms.querySelector('.multi-select-menu');
+          if (menu) menu.hidden = !willOpen;
+          return;
+        }
+
+        const opBtn = e.target.closest('[data-ms-op]');
+        if (opBtn) {
+          const filterKey = ms.getAttribute('data-filter');
+          const op = opBtn.getAttribute('data-ms-op');
+          if (op === 'none') {
+            state.filters[filterKey] = [];
+          } else if (op === 'all') {
+            const checkboxes = [...ms.querySelectorAll('input[type="checkbox"]')];
+            state.filters[filterKey] = checkboxes.map((cb) => cb.value);
+          }
+          renderAllMultiSelects();
+          renderSummary();
+          renderTable();
+        }
+      });
+
+      ms.addEventListener('change', (e) => {
+        const cb = e.target.closest('input[type="checkbox"]');
+        if (!cb) return;
+        const filterKey = ms.getAttribute('data-filter');
+        const checkedVals = [...ms.querySelectorAll('input[type="checkbox"]:checked')].map((el) => el.value);
+        state.filters[filterKey] = checkedVals;
+        renderAllMultiSelects();
+        renderSummary();
+        renderTable();
+      });
     });
-    $('filter-statut').addEventListener('change', (e) => {
-      state.filters.statut = e.target.value;
-      renderSummary();
-      renderTable();
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.multi-select')) {
+        document.querySelectorAll('.multi-select').forEach((ms) => {
+          ms.dataset.open = 'false';
+          const menu = ms.querySelector('.multi-select-menu');
+          if (menu) menu.hidden = true;
+        });
+      }
     });
-    $('filter-priorite').addEventListener('change', (e) => {
-      state.filters.priorite = e.target.value;
-      renderTable();
-    });
-    $('filter-categorie').addEventListener('change', (e) => {
-      state.filters.categorie = e.target.value;
-      renderTable();
-    });
+
     $('sort-by').addEventListener('change', (e) => {
       state.sortBy = e.target.value;
       renderTable();
     });
     $('btn-reset-filters').addEventListener('click', () => {
-      state.filters = { search: '', responsable: '', statut: '', priorite: '', categorie: '' };
+      state.filters = { search: '', responsable: [], statut: [], priorite: [], categorie: [] };
       $('filter-search').value = '';
-      $('filter-responsable').value = '';
-      $('filter-statut').value = '';
-      $('filter-priorite').value = '';
-      $('filter-categorie').value = '';
+      renderAllMultiSelects();
       renderSummary();
       renderTable();
     });
